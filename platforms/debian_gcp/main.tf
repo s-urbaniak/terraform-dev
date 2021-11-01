@@ -1,7 +1,6 @@
 module "debian" {
-  source = "../../modules/debian"
+  source = "../../modules/kind_debian"
 
-  kind_url = var.kind_url
   username = var.username
 }
 

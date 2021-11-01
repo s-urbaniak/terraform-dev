@@ -7,11 +7,6 @@ variable "debian_version" {
   default = "11"
 }
 
-variable "kind_url" {
-  type    = string
-  default = "https://github.com/kubernetes-sigs/kind/releases/download/v0.11.1/kind-linux-amd64"
-}
-
 variable "project" {
   type = string
 }

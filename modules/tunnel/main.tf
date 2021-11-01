@@ -25,6 +25,6 @@ data "external" "kind_port" {
 
 resource "local_file" "tunnel" {
   content         = data.template_file.tunnel.rendered
-  filename        = "tunnel.sh"
+  filename        = "tunnel_kind.sh"
   file_permission = 0777
 }
