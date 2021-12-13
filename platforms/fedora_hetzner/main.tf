@@ -1,5 +1,5 @@
 module "debian" {
-  source = "../../modules/os/debian"
+  source = "../../modules/os/fedora"
 
   username = "root"
 }
@@ -8,7 +8,7 @@ module "machine" {
   source = "../../modules/provider/hetzner"
 
   server_type        = var.server_type
-  image              = "debian-${var.debian_version}"
+  image              = "fedora-${var.fedora_version}"
   machine_prefix     = var.machine_prefix
   provisioner_inline = split("\n", module.debian.init)
   ssh_keys           = var.ssh_keys

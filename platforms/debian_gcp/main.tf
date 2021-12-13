@@ -1,11 +1,11 @@
 module "debian" {
-  source = "../../modules/kind_debian"
+  source = "../../modules/os/debian"
 
   username = var.username
 }
 
 module "machine" {
-  source = "../../modules/gcp"
+  source = "../../modules/provider/gcp"
 
   image_family       = "debian-${var.debian_version}"
   image_project      = "debian-cloud"

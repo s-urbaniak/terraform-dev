@@ -80,3 +80,16 @@ kube-system          kube-proxy-rvpns                             1/1     Runnin
 kube-system          kube-scheduler-kind-control-plane            1/1     Running   0          69m
 local-path-storage   local-path-provisioner-547f784dff-kxfgl      1/1     Running   0          69m
 ```
+
+### Troubleshooting
+
+#### Unable to connect via ssh
+
+In case terraform is not able to provision via ssh make sure you have an SSH agent running or simply execute:
+
+```sh
+$ ssh-add
+```
+
+If the connection still fails, verify that your local ssh key algorithm is accepted by the server.
+Check the server sshd logs.
