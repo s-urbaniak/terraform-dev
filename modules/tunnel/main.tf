@@ -19,7 +19,7 @@ data "external" "kind_port" {
     "-o StrictHostKeyChecking=no",
     "-o UserKnownHostsFile=/dev/null",
     "${var.username}@${var.public_ip}",
-    "sudo sh -c 'echo {\\\"port\\\": \\\"$(kind get kubeconfig | grep server | cut -d: -f4)\\\"}'",
+    "sudo sh -c 'echo {\\\"port\\\": \\\"$(${var.kind_path} get kubeconfig | grep server | cut -d: -f4)\\\"}'",
   ]
 }
 

@@ -81,6 +81,35 @@ kube-system          kube-scheduler-kind-control-plane            1/1     Runnin
 local-path-storage   local-path-provisioner-547f784dff-kxfgl      1/1     Running   0          69m
 ```
 
+### Optional modules
+
+#### podman
+
+The `podman` module provisions a local podman remote connection to the provisioned host. Add the following into `main.tf`:
+
+```
+module "podman" {
+  source = "../../modules/podman"
+
+  triggers = {
+    machine = module.platform.machine_name
+  }
+
+  remote_ip = module.platform.public_ip
+}
+```
+
+Once the machine is provisioned the local system connection list should have the following entry:
+```
+$ podman --remote system connection list
+Name                     Identity    URI
+tf-6170853756317469531*              ssh://core@11.22.33.44:22/run/user/1000/podman/podman.sock
+```
+
+**Prerequisites**:
+- You need to have `podman` locally installed.
+- The referenced platform module must ensure podman is installed on the remote machine.
+
 ### Troubleshooting
 
 #### Unable to connect via ssh
@@ -92,4 +121,4 @@ $ ssh-add
 ```
 
 If the connection still fails, verify that your local ssh key algorithm is accepted by the server.
-Check the server sshd logs.
+Check the server sshd logs for details.

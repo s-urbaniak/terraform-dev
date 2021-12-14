@@ -24,19 +24,5 @@ module "tunnel" {
 
   username  = "core"
   public_ip = module.machine.public_ip
-}
-
-resource "null_resource" "podman" {
-  triggers = {
-    machine = module.machine.machine_name
-  }
-
-  provisioner "local-exec" {
-    command = "podman --remote system connection add tf-${self.id} ssh://core@${module.machine.public_ip}/run/user/1000/podman/podman.sock"
-  }
-
-  provisioner "local-exec" {
-    when    = destroy
-    command = "podman --remote system connection remove tf-${self.id}"
-  }
+  kind_path = "/var/home/core/kind"
 }
