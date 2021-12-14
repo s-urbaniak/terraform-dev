@@ -1,4 +1,4 @@
-module "debian" {
+module "os" {
   source = "../../modules/os/debian"
 
   username = var.username
@@ -12,7 +12,7 @@ module "machine" {
   machine_prefix     = var.machine_prefix
   machine_type       = var.machine_type
   project            = var.project
-  provisioner_inline = split("\n", module.debian.init)
+  provisioner_inline = module.os.init
   region             = var.region
   ssh_keys           = var.ssh_keys
   username           = var.username

@@ -1,3 +1,3 @@
 output "init" {
-    value = data.template_file.init.rendered
+    value = compact(split("\n", data.template_file.init.rendered))
 }

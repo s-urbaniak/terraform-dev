@@ -1,4 +1,4 @@
-module "debian" {
+module "os" {
   source = "../../modules/os/debian"
 
   username = "root"
@@ -10,7 +10,7 @@ module "machine" {
   server_type        = var.server_type
   image              = "debian-${var.debian_version}"
   machine_prefix     = var.machine_prefix
-  provisioner_inline = split("\n", module.debian.init)
+  provisioner_inline = module.os.init
   ssh_keys           = var.ssh_keys
   username           = "root"
   location           = var.location
