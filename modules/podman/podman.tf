@@ -2,7 +2,7 @@ resource "null_resource" "podman" {
   triggers = var.triggers
 
   provisioner "local-exec" {
-    command = "podman --remote system connection add tf-${self.id} ssh://core@${var.remote_ip}${var.podman_socket}"
+    command = "podman --remote system connection add tf-${self.id} ssh://${var.username}@${var.remote_ip}${var.podman_socket}"
   }
 
   provisioner "local-exec" {
