@@ -1,8 +1,3 @@
-variable "provisioner_inline" {
-  type    = list(string)
-  default = []
-}
-
 variable "username" {
   type = string
 }

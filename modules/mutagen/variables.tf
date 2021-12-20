@@ -1,3 +1,8 @@
+variable "sync_paths" {
+    type = list
+    default = []
+}
+
 variable triggers {
     type = map
 }

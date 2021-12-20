@@ -5,7 +5,9 @@ data "google_compute_image" "image" {
 
 resource "google_compute_instance" "kind_vm" {
   name         = "${var.machine_prefix}-${random_id.machine_suffix.hex}"
-  machine_type = "${var.machine_type}"
+  machine_type = var.machine_type
+
+  tags = ["${var.machine_prefix}-${random_id.machine_suffix.hex}"]
 
   boot_disk {
     initialize_params {
@@ -22,20 +24,32 @@ resource "google_compute_instance" "kind_vm" {
   }
 
   metadata = {
-    ssh-keys = join("\n", [for key in var.ssh_keys : "${key.user}:${key.publickey}"])
-  }
-
-  provisioner "remote-exec" {
-    inline = var.provisioner_inline
-  }
-
-  connection {
-    type = "ssh"
-    user = var.username
-    host = self.network_interface[0].access_config[0].nat_ip
+    ssh-keys = join("\n", [for key in var.ssh_keys : "core:${key.publickey}"])
   }
 }
 
 resource "random_id" "machine_suffix" {
   byte_length = 2
+}
+
+resource "google_compute_firewall" "default" {
+  name    = "${var.machine_prefix}-${random_id.machine_suffix.hex}"
+  network = "default"
+
+  allow {
+    protocol = "icmp"
+  }
+
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+
+  allow {
+    protocol = "udp"
+    ports    = ["51820"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+  target_tags   = ["${var.machine_prefix}-${random_id.machine_suffix.hex}"]
 }

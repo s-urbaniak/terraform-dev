@@ -2,11 +2,6 @@ variable "machine_prefix" {
   type = string
 }
 
-variable "debian_version" {
-  type    = string
-  default = "11"
-}
-
 variable "ssh_keys" {
   type = list(object({
     publickey = string
@@ -22,4 +17,29 @@ variable "location" {
 variable "server_type" {
   type    = string
   default = "cx21"
+}
+
+variable "enable_podman" {
+  type    = bool
+  default = true
+}
+
+variable "enable_wireguard" {
+  type    = bool
+  default = true
+}
+
+variable "enable_kind" {
+  type    = bool
+  default = true
+}
+
+variable "enable_sync" {
+  type    = bool
+  default = false
+}
+
+variable "sync_paths" {
+  type = list
+  default = []
 }

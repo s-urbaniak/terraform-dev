@@ -1,6 +1,6 @@
 ## About The Project
 
-terraform-kind is a Terraform based provisioner of [kind](https://kind.sigs.k8s.io/docs/user/quick-start/) deployments on various clouds.
+`terraform-dev` is a Terraform based tool to install development machines on various clouds.
 
 Currently, the following cloud platforms are supported:
 
@@ -30,7 +30,7 @@ $ mkdir -p environment/gcp && cd environment/gcp
 2. Create a configuration called i.e. `main.tf`:
 ```sh
 module "platform" {
-  source = "../../platforms/debian_gcp"
+  source = "../../platforms/gcp_rocky"
 
   project      = "gce-project"
   region       = "europe-west2"
@@ -57,58 +57,145 @@ $ terraform init
 $ terraform apply
 ```
 
-4. Create an SSH tunnel
-```sh
-$ cd environment/gcp
-$ ./tunnel_kind.sh 
-Warning: Permanently added '...' (ED25519) to the list of known hosts.
-```
-
-5. Configure `KUBECONFIG`
-```sh
-$ cd environment/gcp
-$ export KUBECONFIG=$PWD/kubeconfig
-$ kubectl get pod -A
-NAMESPACE            NAME                                         READY   STATUS    RESTARTS   AGE
-kube-system          coredns-558bd4d5db-mb9sm                     1/1     Running   0          69m
-kube-system          coredns-558bd4d5db-r795g                     1/1     Running   0          69m
-kube-system          etcd-kind-control-plane                      1/1     Running   0          69m
-kube-system          kindnet-psvpr                                1/1     Running   0          69m
-kube-system          kube-apiserver-kind-control-plane            1/1     Running   0          69m
-kube-system          kube-controller-manager-kind-control-plane   1/1     Running   0          69m
-kube-system          kube-proxy-rvpns                             1/1     Running   0          69m
-kube-system          kube-scheduler-kind-control-plane            1/1     Running   0          69m
-local-path-storage   local-path-provisioner-547f784dff-kxfgl      1/1     Running   0          69m
-```
-
 ### Optional modules
 
 #### podman
 
-The `podman` module provisions a local podman remote connection to the provisioned host. Add the following into `main.tf`:
+The `podman` module provisions a local podman remote connection to the provisioned host.
+Add the following to `main.tf`:
 
 ```
-module "podman" {
-  source = "../../modules/podman"
-
-  triggers = {
-    machine = module.platform.machine_name
-  }
-
-  remote_ip = module.platform.public_ip
+module "platform" {
+  source = "../../platforms/<your_preferred platform>"
+...
+  enable_podman = true
 }
 ```
 
-Once the machine is provisioned the local system connection list should have the following entry:
+Once the machine is provisioned the local system connection list should have a remote entry:
 ```
 $ podman --remote system connection list
 Name                     Identity    URI
-tf-6170853756317469531*              ssh://core@11.22.33.44:22/run/user/1000/podman/podman.sock
+tf-6170853756317469531*              ssh://core@11.22.33.44:22/run/podman/podman.sock
 ```
 
 **Prerequisites**:
-- You need to have `podman` locally installed.
-- The referenced platform module must ensure podman is installed on the remote machine.
+`podman` must be locally installed, see https://podman.io/.
+
+#### file sync
+
+The `mutagen` module provisions a local mutagen file sync session pointing to the provisioned host.
+Add the following to `main.tf`:
+
+```
+module "platform" {
+  source = "../../platforms/<your_preferred platform>"
+...
+  enable_mutagen = true
+  sync_paths = [
+    "/home/user/src/foo/bar",
+  ]
+}
+```
+
+Once the machine is provisioned the local mutagen sync session list should have a remote entry:
+```
+$ mutagen sync list
+--------------------------------------------------------------------------------
+Name: tf-7048997643480967595
+Identifier: sync_RzC4Ik9rwnB1JkOzaFmRflbWyPpdH3JF1uLSY7ix4ni
+Labels: None
+Alpha:
+	URL: /home/user/src/foo/bar
+	Connection state: Connected
+Beta:
+	URL: core@11.22.33.44:/home/user/src/foo/bar
+	Connection state: Connected
+Status: Watching for changes
+--------------------------------------------------------------------------------
+```
+
+*Note*: Additional entries can be added or removed while the host is provisioned.
+Using `terraform apply` changes will be applied.
+If a sync path entry is removed, the local mutagen sync sessions will be removed.
+Conversely, if a sync path entry is added, a local mutagen sync session will be added.
+
+**Prerequisites**:
+`mutagen` must be locally installed, see https://mutagen.io/.
+
+#### kind
+
+The `kind` module provisions a kubernetes development cluster to the provisioned host using kind.
+Add the following to `main.tf`:
+
+```
+module "platform" {
+  source = "../../platforms/<your_preferred platform>"
+...
+  enable_kind = true
+}
+```
+
+Once the machine is provisioned, you can use `tunnel.sh` to connect to the remote cluster.
+```
+$ ./tunnel.sh
+Warning: Permanently added '11.22.33.44' (ED25519) to the list of known hosts.
+
+# different terminal session
+ export KUBECONFIG=$PWD/kubeconfig
+$ kubectl get pod -A
+NAMESPACE            NAME                                         READY   STATUS    RESTARTS   AGE
+kube-system          coredns-558bd4d5db-285mn                     1/1     Running   0          7m11s
+kube-system          coredns-558bd4d5db-hmnnd                     1/1     Running   0          7m11s
+kube-system          etcd-kind-control-plane                      1/1     Running   0          7m19s
+kube-system          kindnet-8pwc2                                1/1     Running   0          7m11s
+kube-system          kube-apiserver-kind-control-plane            1/1     Running   0          7m19s
+kube-system          kube-controller-manager-kind-control-plane   1/1     Running   0          7m19s
+kube-system          kube-proxy-rswb2                             1/1     Running   0          7m11s
+kube-system          kube-scheduler-kind-control-plane            1/1     Running   0          7m19s
+local-path-storage   local-path-provisioner-547f784dff-857z7      1/1     Running   0          7m11s
+```
+
+#### wireguard
+
+The `wireguard` module provisions a remote wireguard server and a local wireguard client configuration.
+Add the following to `main.tf`:
+
+```
+module "platform" {
+  source = "../../platforms/<your_preferred platform>"
+...
+  enable_wireguard = true
+}
+```
+
+Once the machine is provisioned the VPN tunnel can be started as follows:
+```
+$ sudo wg-quick up $PWD/wg0_0.conf
+[#] ip link add wg0_0 type wireguard
+[#] wg setconf wg0_0 /dev/fd/63
+[#] ip -4 address add 192.168.71.2/24 dev wg0_0
+[#] ip link set mtu 1420 up dev wg0_0
+$ sudo wg show
+interface: wg0_0
+  public key: ...
+  private key: (hidden)
+  listening port: 55676
+
+peer: ...
+  preshared key: (hidden)
+  endpoint: 11.22.33.44:51820
+  allowed ips: 192.168.71.0/24
+  latest handshake: 3 seconds ago
+  transfer: 92 B received, 180 B sent
+  persistent keepalive: every 25 seconds
+```
+
+The VPN IP subnet is `192.168.71.0/24`. The development remote server is reachable at `192.168.71.1`
+while the local machine is reachable at `192.168.71.2`.
+
+**Prerequisites**:
+`wireguard` must be locally installed, see https://www.wireguard.com/.
 
 ### Troubleshooting
 

@@ -1,5 +1,4 @@
-resource "null_resource" "wg-keys" {
-  for_each = toset(["client", "server"])
+resource "null_resource" "wg_server_keys" {
   triggers = var.triggers
 
   provisioner "local-exec" {
@@ -12,7 +11,21 @@ resource "null_resource" "wg-keys" {
   }
 }
 
-resource "null_resource" "wg-preshared-key" {
+resource "null_resource" "wg_client_keys" {
+  count = length(compact(var.clients)) + 1
+  triggers = var.triggers
+
+  provisioner "local-exec" {
+    command = "wg genkey | tee ${self.id}-private.key | wg pubkey > ${self.id}-public.key"
+  }
+
+  provisioner "local-exec" {
+    when    = destroy
+    command = "rm ${self.id}-private.key ${self.id}-public.key"
+  }
+}
+
+resource "null_resource" "wg_preshared_keys" {
   triggers = var.triggers
 
   provisioner "local-exec" {
@@ -26,21 +39,40 @@ resource "null_resource" "wg-preshared-key" {
 }
 
 resource "local_file" "client" {
-  content  = data.template_file.wg_client.rendered
-  filename = "wg0.conf"
+  count = length(null_resource.wg_client_keys)
+
+  content = templatefile("${path.module}/wg-client.conf", {
+    server_key_id    = null_resource.wg_server_keys.id
+    client_key_id    = null_resource.wg_client_keys[count.index].id
+    preshared_key_id = null_resource.wg_preshared_keys.id
+    server_ip        = var.server_ip
+    i                = count.index+2
+  })
+
+  filename = "wg0_${count.index}.conf"
 }
 
 resource "null_resource" "server" {
+  provisioner "remote-exec" {
+    inline = [
+      "sudo dnf -y install elrepo-release epel-release",
+      "sudo dnf -y install kmod-wireguard wireguard-tools",
+    ]
+  }
+
   provisioner "file" {
-    content     = data.template_file.wg_server.rendered
+    content = templatefile("${path.module}/wg-server.conf", {
+      server_key_id    = null_resource.wg_server_keys.id
+      client_key_ids   = [for key in null_resource.wg_client_keys : key.id]
+      preshared_key_id = null_resource.wg_preshared_keys.id
+    })
     destination = "wg0.conf"
   }
 
   provisioner "remote-exec" {
     inline = [
       "sudo cp wg0.conf /etc/wireguard/wg0.conf",
-      "systemctl enable wg-quick@wg0.service",
-      "wg-quick up wg0"
+      "sudo systemctl enable --now wg-quick@wg0.service",
     ]
   }
 
@@ -48,26 +80,5 @@ resource "null_resource" "server" {
     type = "ssh"
     user = var.ssh_username
     host = var.server_ip
-  }
-}
-
-data "template_file" "wg_server" {
-  template = file("${path.module}/wg-server.conf")
-
-  vars = {
-    server_private_key = file("${null_resource.wg-keys["server"].id}-private.key")
-    client_public_key  = file("${null_resource.wg-keys["client"].id}-public.key")
-    preshared_key      = file("${null_resource.wg-preshared-key.id}.key")
-  }
-}
-
-data "template_file" "wg_client" {
-  template = file("${path.module}/wg-client.conf")
-
-  vars = {
-    client_private_key = file("${null_resource.wg-keys["client"].id}-public.key")
-    server_public_key  = file("${null_resource.wg-keys["server"].id}-public.key")
-    preshared_key      = file("${null_resource.wg-preshared-key.id}.key")
-    server_ip          = "${var.server_ip}"
   }
 }

@@ -1,8 +1,3 @@
-variable "provisioner_inline" {
-  type    = list(string)
-  default = []
-}
-
 variable "project" {
   type = string
 }
@@ -16,10 +11,6 @@ variable "zone" {
 }
 
 variable "machine_type" {
-  type = string
-}
-
-variable "username" {
   type = string
 }
 
