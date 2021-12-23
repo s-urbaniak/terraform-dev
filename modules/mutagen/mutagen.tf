@@ -25,6 +25,10 @@ resource "null_resource" "mutagen" {
   ]
 
   provisioner "local-exec" {
+    command = "ssh-keygen -R \"${var.ssh_ip}\" || true"
+  }
+
+  provisioner "local-exec" {
     command = "yes yes | mutagen sync create --ignore-vcs -i .idea --name=tf-${self.id} \"${each.key}\" ${var.ssh_username}@${var.ssh_ip}:\"${each.key}\""
   }
 
