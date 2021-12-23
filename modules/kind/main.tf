@@ -34,6 +34,10 @@ data "external" "kind_port" {
 }
 
 resource "local_file" "tunnel" {
+  depends_on = [
+    null_resource.kubeconfig,
+  ]
+
   content = templatefile("${path.module}/tunnel.sh.tpl", {
     port      = data.external.kind_port.result["port"]
     username  = var.ssh_username
