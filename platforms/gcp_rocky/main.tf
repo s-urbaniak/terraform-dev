@@ -11,6 +11,32 @@ module "machine" {
   zone           = var.zone
 }
 
+resource "null_resource" "disable_selinux" {
+  triggers = {
+    machine = module.machine.machine_name
+  }
+
+  provisioner "file" {
+    destination = "selinux-config"
+    content     = <<EOF
+SELINUX=disabled
+EOF
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo setenforce 0",
+      "sudo cp selinux-config /etc/selinux/config",
+    ]
+  }
+
+  connection {
+    type = "ssh"
+    user = "core"
+    host = module.machine.public_ip
+  }
+}
+
 module "podman" {
   count  = var.enable_podman ? 1 : 0
   source = "../../modules/podman"
