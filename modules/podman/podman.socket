@@ -1,6 +1,6 @@
 [Socket]
 ListenStream=%t/podman/podman.sock
-SocketMode=0660
+SocketMode=0666
 SocketUser=root
 SocketGroup=adm
 

@@ -27,11 +27,11 @@ resource "null_resource" "local_podman" {
   }
 
   provisioner "local-exec" {
-    command = "podman --remote system connection add tf-${self.id} ssh://${var.ssh_username}@${var.ssh_ip}/run/podman/podman.sock"
+    command = "podman system connection add tf-${self.id} ssh://${var.ssh_username}@${var.ssh_ip}/run/podman/podman.sock"
   }
 
   provisioner "local-exec" {
     when    = destroy
-    command = "podman --remote system connection remove tf-${self.id}"
+    command = "podman system connection remove tf-${self.id}"
   }
 }
