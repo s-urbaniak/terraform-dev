@@ -23,14 +23,11 @@ A Heztner Cloud API token must be available in the environment, see https://regi
 
 ### Usage
 
-1. Create an environment:
+1. Create a configuration:
 ```sh
-$ mkdir -p environment/gcp && cd environment/gcp
-```
-2. Create a configuration called i.e. `main.tf`:
-```sh
+$ mkdir dev-gcp && cd dev-gcp
 module "platform" {
-  source = "../../platforms/gcp_rocky"
+  source = "git::https://github.com/s-urbaniak/terraform-dev//platforms/gcp_rocky"
 
   project      = "gce-project"
   region       = "europe-west2"
@@ -50,9 +47,8 @@ module "platform" {
 
 Inspect `variables.tf` for variables of the provisioned platform for possible settings.
 
-3. Run terraform
+2. Run terraform
 ```sh
-$ cd environment/gcp
 $ terraform init
 $ terraform apply
 ```
@@ -66,7 +62,7 @@ Add the following to `main.tf`:
 
 ```
 module "platform" {
-  source = "../../platforms/<your_preferred platform>"
+  source = "git::https://github.com/s-urbaniak/terraform-dev//platforms/<your_preferred platform>"
 ...
   enable_podman = true
 }
@@ -89,7 +85,7 @@ Add the following to `main.tf`:
 
 ```
 module "platform" {
-  source = "../../platforms/<your_preferred platform>"
+  source = "git::https://github.com/s-urbaniak/terraform-dev//platforms/<your_preferred platform>"
 ...
   enable_mutagen = true
   sync_paths = [
@@ -130,7 +126,7 @@ Add the following to `main.tf`:
 
 ```
 module "platform" {
-  source = "../../platforms/<your_preferred platform>"
+  source = "git::https://github.com/s-urbaniak/terraform-dev//platforms/<your_preferred platform>"
 ...
   enable_kind = true
 }
@@ -163,7 +159,7 @@ Add the following to `main.tf`:
 
 ```
 module "platform" {
-  source = "../../platforms/<your_preferred platform>"
+  source = "git::https://github.com/s-urbaniak/terraform-dev//platforms/<your_preferred platform>"
 ...
   enable_wireguard = true
 }
