@@ -3,7 +3,7 @@ variable "username" {
 }
 
 variable "server_type" {
-    type = string
+  type = string
 }
 
 variable "ssh_keys" {

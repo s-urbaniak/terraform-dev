@@ -12,7 +12,7 @@ resource "null_resource" "wg_server_keys" {
 }
 
 resource "null_resource" "wg_client_keys" {
-  count = length(compact(var.clients)) + 1
+  count    = length(compact(var.clients)) + 1
   triggers = var.triggers
 
   provisioner "local-exec" {
@@ -46,7 +46,7 @@ resource "local_file" "client" {
     client_key_id    = null_resource.wg_client_keys[count.index].id
     preshared_key_id = null_resource.wg_preshared_keys.id
     server_ip        = var.server_ip
-    i                = count.index+2
+    i                = count.index + 2
   })
 
   filename = "wg0_${count.index}.conf"

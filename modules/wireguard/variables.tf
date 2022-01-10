@@ -1,16 +1,16 @@
 variable "triggers" {
-  type = map
+  type = map(any)
 }
 
 variable "clients" {
-    type = list
-    default = []
+  type    = list(any)
+  default = []
 }
 
 variable "ssh_username" {
-    type = string
+  type = string
 }
 
 variable "server_ip" {
-    type = string
+  type = string
 }

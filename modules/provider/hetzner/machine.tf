@@ -11,10 +11,10 @@ data "hcloud_image" "image" {
 }
 
 resource "hcloud_server" "kind" {
-  name        = "${var.machine_prefix}-${random_id.machine_suffix.hex}"
-  image       = data.hcloud_image.image.name
-  server_type = var.server_type
-  location    = var.location
+  name         = "${var.machine_prefix}-${random_id.machine_suffix.hex}"
+  image        = data.hcloud_image.image.name
+  server_type  = var.server_type
+  location     = var.location
   firewall_ids = [hcloud_firewall.myfirewall.id]
 
   ssh_keys = [for key in resource.hcloud_ssh_key.keys : "${key.id}"]

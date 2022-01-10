@@ -2,7 +2,7 @@ resource "null_resource" "remote_podman" {
   triggers = var.triggers
 
   provisioner "file" {
-    content = file("${path.module}/podman.socket")
+    content     = file("${path.module}/podman.socket")
     destination = "podman.socket"
   }
 

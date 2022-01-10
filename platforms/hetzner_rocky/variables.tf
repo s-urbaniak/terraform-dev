@@ -40,6 +40,6 @@ variable "enable_sync" {
 }
 
 variable "sync_paths" {
-  type = list
+  type    = list(any)
   default = []
 }
