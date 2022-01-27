@@ -6,7 +6,7 @@ resource "null_resource" "kubeconfig" {
       "curl -OL# ${var.kind_url}",
       "sudo mv kind* /usr/local/bin/kind",
       "sudo chmod +x /usr/local/bin/kind",
-      "sudo KIND_EXPERIMENTAL_PROVIDER=podman /usr/local/bin/kind create cluster",
+      "sudo KIND_EXPERIMENTAL_PROVIDER=podman /usr/local/bin/kind create cluster --image=kindest/node:v1.23.0",
       "sudo cp /root/.kube/config kubeconfig",
       "sudo chmod a+r kubeconfig",
     ]
