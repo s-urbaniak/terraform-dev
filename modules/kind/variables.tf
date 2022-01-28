@@ -14,3 +14,13 @@ variable "kind_url" {
 variable "triggers" {
   type = map(any)
 }
+
+variable "kind_startup_options" {
+  type    = string
+  default = ""
+}
+
+variable "kind_config" {
+  type    = string
+  default = ""
+}

@@ -132,13 +132,15 @@ module "platform" {
 }
 ```
 
-Once the machine is provisioned, you can use `tunnel.sh` to connect to the remote cluster.
+##### Connecting via ssh
+
+Once the machine is provisioned, `tunnel.sh` can be used to connect to the remote cluster.
 ```
 $ ./tunnel.sh
 Warning: Permanently added '11.22.33.44' (ED25519) to the list of known hosts.
 
-# different terminal session
- export KUBECONFIG=$PWD/kubeconfig
+$ export KUBECONFIG=$PWD/kubeconfig
+
 $ kubectl get pod -A
 NAMESPACE            NAME                                         READY   STATUS    RESTARTS   AGE
 kube-system          coredns-558bd4d5db-285mn                     1/1     Running   0          7m11s
@@ -150,6 +152,102 @@ kube-system          kube-controller-manager-kind-control-plane   1/1     Runnin
 kube-system          kube-proxy-rswb2                             1/1     Running   0          7m11s
 kube-system          kube-scheduler-kind-control-plane            1/1     Running   0          7m19s
 local-path-storage   local-path-provisioner-547f784dff-857z7      1/1     Running   0          7m11s
+```
+
+##### Connecting via wireguard VPN
+
+An alternative way of connecting is via WireGuard/VPN. Here, the `wireguard` module must be enabled
+and kind needs to be configured to listen to the WireGuard server IP:
+
+```
+module "platform" {
+  source = "git::https://github.com/s-urbaniak/terraform-dev//platforms/<your_preferred platform>"
+...
+  enable_kind          = true
+
+  kind_config          = <<EOF
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+networking:
+  apiServerAddress: "192.168.71.1"
+  EOF
+
+  enable_wiregard = true
+}
+```
+
+After provisioning, the cluster can be reached as follows:
+
+```
+$ sudo wg-quick up $PWD/wg0_0.conf
+Warning: `/Users/surbania/src/terraform-dev/environment/gcp/wg0_0.conf' is world accessible
+[#] wireguard-go utun
+[+] Interface for wg0_0 is utun5
+[#] wg setconf utun5 /dev/fd/63
+[#] ifconfig utun5 inet 192.168.71.2/24 192.168.71.2 alias
+[#] ifconfig utun5 up
+[#] route -q -n add -inet 192.168.71.0/24 -interface utun5
+[+] Backgrounding route monitor
+
+$ export KUBECONFIG=$PWD/kubeconfig
+
+$ kubectl get pod -A
+NAMESPACE            NAME                                         READY   STATUS    RESTARTS   AGE
+kube-system          coredns-64897985d-rqcqv                      1/1     Running   0          3m56s
+kube-system          coredns-64897985d-v6kch                      1/1     Running   0          3m56s
+kube-system          etcd-kind-control-plane                      1/1     Running   0          4m11s
+kube-system          kindnet-8582s                                1/1     Running   0          3m56s
+kube-system          kube-apiserver-kind-control-plane            1/1     Running   0          4m11s
+kube-system          kube-controller-manager-kind-control-plane   1/1     Running   0          4m11s
+kube-system          kube-proxy-txgtk                             1/1     Running   0          3m56s
+kube-system          kube-scheduler-kind-control-plane            1/1     Running   0          4m11s
+local-path-storage   local-path-provisioner-5bb5788f44-5nszq      1/1     Running   0          3m56s
+```
+
+##### Specifying the kind version
+
+To specify the version of `kind`, configure the `kind_version` variable:
+
+```
+module "platform" {
+  source = "git::https://github.com/s-urbaniak/terraform-dev//platforms/<your_preferred platform>"
+...
+  enable_kind = true
+  kind_version = "v0.11.1"
+}
+```
+
+##### cluster creation command line options
+
+To specify command line options, configure the `kind_startup_options` variable.
+These will be appended to the `kind create cluster` command:
+
+```
+module "platform" {
+  source = "git::https://github.com/s-urbaniak/terraform-dev//platforms/<your_preferred platform>"
+...
+  enable_kind = true
+  kind_startup_options = "--image=kindest/node:v1.23.0"
+}
+```
+
+##### kind configuration
+
+Additional configuration for `kind` can be declared using the `kind_config` variable, example:
+
+```
+module "platform" {
+  source = "git::https://github.com/s-urbaniak/terraform-dev//platforms/<your_preferred platform>"
+...
+
+  enable_kind = true
+  kind_config          = <<EOF
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+runtimeConfig:
+  "api/alpha": "false"
+  EOF
+}
 ```
 
 #### wireguard

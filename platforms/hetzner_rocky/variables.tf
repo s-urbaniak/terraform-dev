@@ -43,3 +43,18 @@ variable "sync_paths" {
   type    = list(any)
   default = []
 }
+
+variable "kind_startup_options" {
+  type    = string
+  default = ""
+}
+
+variable "kind_config" {
+  type    = string
+  default = ""
+}
+
+variable "kind_version" {
+  type    = string
+  default = "v0.11.1"
+}

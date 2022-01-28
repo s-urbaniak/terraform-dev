@@ -77,8 +77,11 @@ module "kind" {
     machine = module.machine.machine_name
   }
 
-  ssh_ip       = module.machine.public_ip
-  ssh_username = "core"
+  ssh_ip               = module.machine.public_ip
+  ssh_username         = "core"
+  kind_startup_options = var.kind_startup_options
+  kind_config          = var.kind_config
+  kind_url             = "https://github.com/kubernetes-sigs/kind/releases/download/${var.kind_version}/kind-linux-amd64"
 }
 
 module "mutagen" {
