@@ -11,6 +11,7 @@ resource "google_compute_instance" "kind_vm" {
 
   boot_disk {
     initialize_params {
+      size  = 100
       image = data.google_compute_image.image.self_link
     }
   }
