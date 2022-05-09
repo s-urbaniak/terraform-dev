@@ -96,3 +96,15 @@ module "mutagen" {
   ssh_username = "core"
   sync_paths   = var.sync_paths
 }
+
+module "docker" {
+  count  = var.enable_docker ? 1 : 0
+  source = "../../modules/docker"
+
+  triggers = {
+    machine = module.machine.machine_name
+  }
+
+  ssh_ip       = module.machine.public_ip
+  ssh_username = "core"
+}

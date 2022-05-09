@@ -66,3 +66,8 @@ variable "kind_version" {
   type    = string
   default = "v0.11.1"
 }
+
+variable "enable_docker" {
+  type    = bool
+  default = false
+}
