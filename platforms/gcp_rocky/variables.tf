@@ -71,3 +71,9 @@ variable "enable_docker" {
   type    = bool
   default = false
 }
+
+variable "disk_size" {
+  type        = number
+  default     = 100
+  description = "The disk size of the machines in gigabytes"
+}

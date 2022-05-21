@@ -9,6 +9,7 @@ module "machine" {
   region         = var.region
   ssh_keys       = var.ssh_keys
   zone           = var.zone
+  disk_size      = var.disk_size
 }
 
 resource "null_resource" "disable_selinux" {

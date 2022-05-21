@@ -33,3 +33,7 @@ variable "image_project" {
 variable "machine_prefix" {
   type = string
 }
+
+variable "disk_size" {
+  type = number
+}
