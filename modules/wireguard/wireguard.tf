@@ -2,12 +2,12 @@ resource "null_resource" "wg_server_keys" {
   triggers = var.triggers
 
   provisioner "local-exec" {
-    command = "wg genkey | tee ${self.id}-private.key | wg pubkey > ${self.id}-public.key"
+    command = "wg genkey | tee wg-server-${self.id}-private.key | wg pubkey > wg-server-${self.id}-public.key"
   }
 
   provisioner "local-exec" {
     when    = destroy
-    command = "rm ${self.id}-private.key ${self.id}-public.key"
+    command = "rm wg-server-${self.id}-private.key wg-server-${self.id}-public.key"
   }
 }
 
@@ -16,12 +16,12 @@ resource "null_resource" "wg_client_keys" {
   triggers = var.triggers
 
   provisioner "local-exec" {
-    command = "wg genkey | tee ${self.id}-private.key | wg pubkey > ${self.id}-public.key"
+    command = "wg genkey | tee wg-client-${self.id}-private.key | wg pubkey > wg-client-${self.id}-public.key"
   }
 
   provisioner "local-exec" {
     when    = destroy
-    command = "rm ${self.id}-private.key ${self.id}-public.key"
+    command = "rm wg-client-${self.id}-private.key wg-client-${self.id}-public.key"
   }
 }
 
@@ -29,12 +29,12 @@ resource "null_resource" "wg_preshared_keys" {
   triggers = var.triggers
 
   provisioner "local-exec" {
-    command = "wg genpsk > ${self.id}.key"
+    command = "wg genpsk > wg-preshared-${self.id}.key"
   }
 
   provisioner "local-exec" {
     when    = destroy
-    command = "rm ${self.id}.key"
+    command = "rm wg-preshared-${self.id}.key"
   }
 }
 
@@ -49,7 +49,7 @@ resource "local_file" "client" {
     i                = count.index + 2
   })
 
-  filename = "wg0_${count.index}.conf"
+  filename = "wg-client-${count.index}.conf"
 }
 
 resource "null_resource" "server" {
