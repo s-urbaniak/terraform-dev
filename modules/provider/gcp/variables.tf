@@ -11,7 +11,8 @@ variable "zone" {
 }
 
 variable "machine_type" {
-  type = string
+  type    = string
+  default = "e2-standard-8"
 }
 
 variable "ssh_keys" {
@@ -23,11 +24,13 @@ variable "ssh_keys" {
 }
 
 variable "image_family" {
-  type = string
+  type    = string
+  default = "centos-stream-9"
 }
 
 variable "image_project" {
-  type = string
+  type    = string
+  default = "centos-cloud"
 }
 
 variable "machine_prefix" {
@@ -35,5 +38,7 @@ variable "machine_prefix" {
 }
 
 variable "disk_size" {
-  type = number
+  type        = number
+  default     = 100
+  description = "The disk size of the machines in gigabytes"
 }

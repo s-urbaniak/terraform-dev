@@ -1,19 +1,17 @@
 resource "null_resource" "kind_binary" {
-  triggers = merge(
-    var.triggers,
-    {
-      "kind_url" : var.kind_url,
-      "ssh_username" : var.ssh_username,
-      "ssh_ip" : var.ssh_ip,
-    }
-  )
+  triggers = {
+    "kind_version" : var.kind_version,
+    "ssh_username" : var.ssh_username,
+    "ssh_ip" : var.ssh_ip,
+  }
 
   provisioner "remote-exec" {
     inline = [
-      "curl -OL# ${self.triggers.kind_url}",
+      "curl -OL# https://github.com/kubernetes-sigs/kind/releases/download/${self.triggers.kind_version}/kind-linux-amd64",
       "sudo mv kind-linux* /usr/local/bin/kind",
       "sudo chmod +x /usr/local/bin/kind",
     ]
+    on_failure = fail
   }
 
   provisioner "remote-exec" {
@@ -21,6 +19,7 @@ resource "null_resource" "kind_binary" {
     inline = [
       "sudo rm -f /usr/local/bin/kind",
     ]
+    on_failure = fail
   }
 
   connection {
@@ -33,14 +32,11 @@ resource "null_resource" "kind_binary" {
 resource "null_resource" "kind_config" {
   count = var.kind_config == "" ? 0 : 1
 
-  triggers = merge(
-    var.triggers,
-    {
-      "ssh_username" : var.ssh_username,
-      "ssh_ip" : var.ssh_ip,
-      "kind_config" : var.kind_config,
-    }
-  )
+  triggers = {
+    "ssh_username" : var.ssh_username,
+    "ssh_ip" : var.ssh_ip,
+    "kind_config" : var.kind_config,
+  }
 
   provisioner "file" {
     content     = var.kind_config
@@ -52,6 +48,7 @@ resource "null_resource" "kind_config" {
     inline = [
       "rm -f kind.yaml",
     ]
+    on_failure = fail
   }
 
   connection {
@@ -68,22 +65,21 @@ resource "null_resource" "kind_cluster" {
     null_resource.kind_config,
   ]
 
-  triggers = merge(
-    var.triggers,
-    {
-      "ssh_username" : var.ssh_username,
-      "ssh_ip" : var.ssh_ip,
-      "kind_startup_options" : var.kind_startup_options,
-      "kind_config" : var.kind_config,
-    }
-  )
+  triggers = {
+    "ssh_username" : var.ssh_username,
+    "ssh_ip" : var.ssh_ip,
+    "kind_startup_options" : var.kind_startup_options,
+    "kind_config" : var.kind_config,
+    "use_podman" : var.use_podman,
+  }
 
   provisioner "remote-exec" {
     inline = [
-      "sudo KIND_EXPERIMENTAL_PROVIDER=podman /usr/local/bin/kind create cluster ${var.kind_startup_options} ${var.kind_config != "" ? "--config kind.yaml" : ""}",
+      "sudo ${self.triggers.use_podman ? "KIND_EXPERIMENTAL_PROVIDER=podman" : ""} /usr/local/bin/kind create cluster ${var.kind_startup_options} ${var.kind_config != "" ? "--config kind.yaml" : ""}",
       "sudo cp /root/.kube/config kubeconfig",
       "sudo chmod a+r kubeconfig",
     ]
+    on_failure = fail
   }
 
   provisioner "local-exec" {
@@ -93,8 +89,9 @@ resource "null_resource" "kind_cluster" {
   provisioner "remote-exec" {
     when = destroy
     inline = [
-      "sudo KIND_EXPERIMENTAL_PROVIDER=podman /usr/local/bin/kind delete cluster",
+      "sudo ${self.triggers.use_podman ? "KIND_EXPERIMENTAL_PROVIDER=podman" : ""} /usr/local/bin/kind delete cluster",
     ]
+    on_failure = fail
   }
 
   provisioner "local-exec" {

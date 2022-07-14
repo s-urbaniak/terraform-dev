@@ -1,6 +1,4 @@
 resource "null_resource" "docker" {
-  triggers = var.triggers
-
   provisioner "remote-exec" {
     inline = [
       "sudo dnf -y config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo",
@@ -9,6 +7,7 @@ resource "null_resource" "docker" {
       "sudo systemctl enable --now docker",
       "sudo usermod -aG docker core",
     ]
+    on_failure = fail
   }
 
   connection {

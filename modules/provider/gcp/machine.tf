@@ -11,7 +11,7 @@ resource "google_compute_instance" "kind_vm" {
 
   boot_disk {
     initialize_params {
-      size  = ${var.disk_size}
+      size  = var.disk_size
       image = data.google_compute_image.image.self_link
     }
   }

@@ -3,5 +3,5 @@ output "public_ip" {
 }
 
 output "machine_name" {
-  value = "google_compute_instance.kind_vm.name"
+  value = google_compute_instance.kind_vm.name
 }

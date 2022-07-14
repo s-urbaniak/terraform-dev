@@ -1,18 +1,15 @@
 variable "ssh_username" {
-  type = string
+  type    = string
+  default = "core"
 }
 
 variable "ssh_ip" {
   type = string
 }
 
-variable "kind_url" {
+variable "kind_version" {
   type    = string
-  default = "https://github.com/kubernetes-sigs/kind/releases/download/v0.11.1/kind-linux-amd64"
-}
-
-variable "triggers" {
-  type = map(any)
+  default = "v0.14.0"
 }
 
 variable "kind_startup_options" {
@@ -23,4 +20,9 @@ variable "kind_startup_options" {
 variable "kind_config" {
   type    = string
   default = ""
+}
+
+variable "use_podman" {
+  type    = bool
+  default = false
 }

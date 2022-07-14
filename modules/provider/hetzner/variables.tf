@@ -1,7 +1,3 @@
-variable "username" {
-  type = string
-}
-
 variable "server_type" {
   type = string
 }
@@ -15,7 +11,8 @@ variable "ssh_keys" {
 }
 
 variable "image" {
-  type = string
+  type    = string
+  default = "centos-stream-9"
 }
 
 variable "machine_prefix" {

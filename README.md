@@ -4,6 +4,7 @@
 
 Currently, the following cloud platforms are supported:
 
+* AWS
 * GCP
 * Hetzner Cloud
 
@@ -11,23 +12,16 @@ Currently, the following cloud platforms are supported:
 
 ### Prerequisites
 
-You need to have [terraform](https://www.terraform.io/) installed.
+You need to install [terraform](https://www.terraform.io/).
 
 #### GCP
 
 GCP credentials must be available in the environment, see https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference#full-reference for details.
 
-#### Hetzner Cloud
-
-A Heztner Cloud API token must be available in the environment, see https://registry.terraform.io/providers/hetznercloud/hcloud/latest/docs#argument-reference for details.
-
-### Usage
-
-1. Create a configuration:
-```sh
-$ mkdir dev-gcp && cd dev-gcp
-module "platform" {
-  source = "git::https://github.com/s-urbaniak/terraform-dev//platforms/gcp_rocky"
+Example configuration:
+```
+module "provider" {
+  source = "git::https://github.com/s-urbaniak/terraform-dev//modules/provider/gcp"
 
   project      = "gce-project"
   region       = "europe-west2"
@@ -45,8 +39,47 @@ module "platform" {
 }
 ```
 
-Inspect `variables.tf` for variables of the provisioned platform for possible settings.
+#### AWS
 
+AWS credentials must be available in the environment, see https://registry.terraform.io/providers/hashicorp/aws/latest/docs#provider-configuration for details.
+
+Example configuration:
+```
+module "provider" {
+  source = "git::https://github.com/s-urbaniak/terraform-dev//modules/provider/aws"
+
+  region  = "eu-west-2"
+  profile = "my-profile"
+
+  machine_prefix = "foo"
+  ssh_key        = "ssh-ed25519 ..."
+}
+```
+#### Hetzner Cloud
+
+A Hetzner Cloud API token must be available in the environment, see https://registry.terraform.io/providers/hetznercloud/hcloud/latest/docs#argument-reference for details.
+
+Example configuration:
+```
+module "provider" {
+  source = "git::https://github.com/s-urbaniak/terraform-dev//modules/provider/hetzner"
+
+  location       = "nbg1"
+  machine_prefix = "foo"
+  server_type    = "cx11"
+
+  ssh_keys = [
+    {
+      user : "foo",
+      publickey : "ssh-rsa YOUR-PUBLIC-KEY",
+    },
+  ]
+}
+```
+
+### Usage
+
+1. Create a provider configuration, inspect `variables.tf` for variables of the provisioned provider for possible settings.
 2. Run terraform
 ```sh
 $ terraform init
@@ -61,10 +94,19 @@ The `podman` module provisions a local podman remote connection to the provision
 Add the following to `main.tf`:
 
 ```
-module "platform" {
-  source = "git::https://github.com/s-urbaniak/terraform-dev//platforms/<your_preferred platform>"
+module "provider" {
+  source = "git::https://github.com/s-urbaniak/terraform-dev//provider/<your_preferred platform>"
 ...
-  enable_podman = true
+}
+
+module "podman" {
+  source = "git::https://github.com/s-urbaniak/terraform-dev//podman"
+
+  depends_on = [
+    module.provider,
+  ]
+
+  ssh_ip       = module.provider.public_ip
 }
 ```
 
@@ -75,8 +117,27 @@ Name                     Identity    URI
 tf-6170853756317469531*              ssh://core@11.22.33.44:22/run/podman/podman.sock
 ```
 
-**Prerequisites**:
-`podman` must be locally installed, see https://podman.io/.
+#### Docker
+
+The `docker` module installs docker to the provisioned host.
+Add the following to `main.tf`:
+
+```
+module "provider" {
+  source = "git::https://github.com/s-urbaniak/terraform-dev//provider/<your_preferred platform>"
+...
+}
+
+module "docker" {
+  source = "git::https://github.com/s-urbaniak/terraform-dev//modules/docker"
+
+  depends_on = [
+    module.provider,
+  ]
+
+  ssh_ip = module.provider.public_ip
+}
+```
 
 #### file sync
 
@@ -84,12 +145,22 @@ The `mutagen` module provisions a local mutagen file sync session pointing to th
 Add the following to `main.tf`:
 
 ```
-module "platform" {
-  source = "git::https://github.com/s-urbaniak/terraform-dev//platforms/<your_preferred platform>"
+module "provider" {
+  source = "git::https://github.com/s-urbaniak/terraform-dev//provider/<your_preferred platform>"
 ...
-  enable_mutagen = true
+}
+
+module "mutagen" {
+  source = "git::https://github.com/s-urbaniak/terraform-dev//modules/mutagen"
+
+  depends_on = [
+    module.provider,
+  ]
+
+  ssh_ip = module.provider.public_ip
   sync_paths = [
-    "/home/user/src/foo/bar",
+    "/home/foo/src",
+    "/home/foo/bar",
   ]
 }
 ```
@@ -125,10 +196,47 @@ The `kind` module provisions a kubernetes development cluster to the provisioned
 Add the following to `main.tf`:
 
 ```
-module "platform" {
-  source = "git::https://github.com/s-urbaniak/terraform-dev//platforms/<your_preferred platform>"
+module "provider" {
+  source = "git::https://github.com/s-urbaniak/terraform-dev//provider/<your_preferred platform>"
 ...
-  enable_kind = true
+}
+
+module "docker" {
+...
+}
+
+module "kind" {
+  source = "git::https://github.com/s-urbaniak/terraform-dev//modules/kind"
+
+  depends_on = [
+    module.docker,
+  ]
+
+  ssh_ip     = module.provider.public_ip
+}
+```
+
+`podman` is also supported for kind. In this case `use_podman=true` must be set:
+
+```
+module "provider" {
+  source = "git::https://github.com/s-urbaniak/terraform-dev//provider/<your_preferred platform>"
+...
+}
+
+module "podman" {
+...
+}
+
+module "kind" {
+  source = "git::https://github.com/s-urbaniak/terraform-dev//modules/kind"
+
+  depends_on = [
+    module.podman,
+  ]
+
+  ssh_ip     = module.provider.public_ip
+  use_podman = true
 }
 ```
 
@@ -160,10 +268,21 @@ An alternative way of connecting is via WireGuard/VPN. Here, the `wireguard` mod
 and kind needs to be configured to listen to the WireGuard server IP:
 
 ```
-module "platform" {
-  source = "git::https://github.com/s-urbaniak/terraform-dev//platforms/<your_preferred platform>"
+module "provider" {
+  source = "git::https://github.com/s-urbaniak/terraform-dev//provider/<your_preferred platform>"
 ...
-  enable_kind          = true
+}
+
+module "docker" {
+...
+}
+
+module "kind" {
+  source = "git::https://github.com/s-urbaniak/terraform-dev//modules/kind"
+
+  depends_on = [
+    module.docker,
+  ]
 
   kind_config          = <<EOF
 kind: Cluster
@@ -172,7 +291,7 @@ networking:
   apiServerAddress: "192.168.71.1"
   EOF
 
-  enable_wiregard = true
+  ssh_ip     = module.provider.public_ip
 }
 ```
 
@@ -209,10 +328,9 @@ local-path-storage   local-path-provisioner-5bb5788f44-5nszq      1/1     Runnin
 To specify the version of `kind`, configure the `kind_version` variable:
 
 ```
-module "platform" {
-  source = "git::https://github.com/s-urbaniak/terraform-dev//platforms/<your_preferred platform>"
+module "kind" {
+  source = "git::https://github.com/s-urbaniak/terraform-dev//modules/kind"
 ...
-  enable_kind = true
   kind_version = "v0.11.1"
 }
 ```
@@ -223,8 +341,8 @@ To specify command line options, configure the `kind_startup_options` variable.
 These will be appended to the `kind create cluster` command:
 
 ```
-module "platform" {
-  source = "git::https://github.com/s-urbaniak/terraform-dev//platforms/<your_preferred platform>"
+module "kind" {
+  source = "git::https://github.com/s-urbaniak/terraform-dev//modules/kind"
 ...
   enable_kind = true
   kind_startup_options = "--image=kindest/node:v1.23.0"
@@ -236,11 +354,9 @@ module "platform" {
 Additional configuration for `kind` can be declared using the `kind_config` variable, example:
 
 ```
-module "platform" {
-  source = "git::https://github.com/s-urbaniak/terraform-dev//platforms/<your_preferred platform>"
+module "kind" {
+  source = "git::https://github.com/s-urbaniak/terraform-dev//modules/kind"
 ...
-
-  enable_kind = true
   kind_config          = <<EOF
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
@@ -256,10 +372,19 @@ The `wireguard` module provisions a remote wireguard server and a local wireguar
 Add the following to `main.tf`:
 
 ```
-module "platform" {
-  source = "git::https://github.com/s-urbaniak/terraform-dev//platforms/<your_preferred platform>"
+module "provider" {
+  source = "git::https://github.com/s-urbaniak/terraform-dev//provider/<your_preferred platform>"
 ...
-  enable_wireguard = true
+}
+
+module "wireguard" {
+  source = "git::https://github.com/s-urbaniak/terraform-dev//wireguard"
+
+  depends_on = [
+    module.provider,
+  ]
+
+  server_ip = module.provider.public_ip
 }
 ```
 

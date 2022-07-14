@@ -21,7 +21,7 @@ resource "hcloud_server" "kind" {
 
   connection {
     type = "ssh"
-    user = var.username
+    user = "root"
     host = self.ipv4_address
   }
 }

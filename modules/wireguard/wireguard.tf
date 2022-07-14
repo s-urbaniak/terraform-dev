@@ -1,6 +1,4 @@
 resource "null_resource" "wg_server_keys" {
-  triggers = var.triggers
-
   provisioner "local-exec" {
     command = "wg genkey | tee wg-server-${self.id}-private.key | wg pubkey > wg-server-${self.id}-public.key"
   }
@@ -12,8 +10,7 @@ resource "null_resource" "wg_server_keys" {
 }
 
 resource "null_resource" "wg_client_keys" {
-  count    = length(compact(var.clients)) + 1
-  triggers = var.triggers
+  count = length(compact(var.clients)) + 1
 
   provisioner "local-exec" {
     command = "wg genkey | tee wg-client-${self.id}-private.key | wg pubkey > wg-client-${self.id}-public.key"
@@ -26,8 +23,6 @@ resource "null_resource" "wg_client_keys" {
 }
 
 resource "null_resource" "wg_preshared_keys" {
-  triggers = var.triggers
-
   provisioner "local-exec" {
     command = "wg genpsk > wg-preshared-${self.id}.key"
   }
@@ -55,8 +50,7 @@ resource "local_file" "client" {
 resource "null_resource" "server" {
   provisioner "remote-exec" {
     inline = [
-      "sudo dnf -y install elrepo-release epel-release",
-      "sudo dnf -y install kmod-wireguard wireguard-tools",
+      "sudo dnf -y install wireguard-tools",
     ]
   }
 
@@ -74,6 +68,7 @@ resource "null_resource" "server" {
       "sudo cp wg0.conf /etc/wireguard/wg0.conf",
       "sudo systemctl enable --now wg-quick@wg0.service",
     ]
+    on_failure = fail
   }
 
   connection {

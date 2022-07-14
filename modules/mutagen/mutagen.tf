@@ -1,5 +1,4 @@
 resource "null_resource" "prepare_remote" {
-  triggers = var.triggers
   for_each = toset(var.sync_paths)
 
   provisioner "remote-exec" {
@@ -7,6 +6,7 @@ resource "null_resource" "prepare_remote" {
       "sudo mkdir -p \"${each.key}\"",
       "sudo chown -R ${var.ssh_username}:${var.ssh_username} \"${each.key}\"",
     ]
+    on_failure = fail
   }
 
   connection {
@@ -17,7 +17,6 @@ resource "null_resource" "prepare_remote" {
 }
 
 resource "null_resource" "mutagen" {
-  triggers = var.triggers
   for_each = toset(var.sync_paths)
 
   depends_on = [
