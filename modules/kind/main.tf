@@ -75,7 +75,7 @@ resource "null_resource" "kind_cluster" {
 
   provisioner "remote-exec" {
     inline = [
-      "sudo ${self.triggers.use_podman ? "KIND_EXPERIMENTAL_PROVIDER=podman" : ""} /usr/local/bin/kind create cluster ${var.kind_startup_options} ${var.kind_config != "" ? "--config kind.yaml" : ""}",
+      "sudo /usr/local/bin/kind create cluster ${var.kind_startup_options} ${var.kind_config != "" ? "--config kind.yaml" : ""}",
       "sudo cp /root/.kube/config kubeconfig",
       "sudo chmod a+r kubeconfig",
     ]
@@ -89,7 +89,7 @@ resource "null_resource" "kind_cluster" {
   provisioner "remote-exec" {
     when = destroy
     inline = [
-      "sudo ${self.triggers.use_podman ? "KIND_EXPERIMENTAL_PROVIDER=podman" : ""} /usr/local/bin/kind delete cluster",
+      "sudo /usr/local/bin/kind delete cluster",
     ]
     on_failure = fail
   }
