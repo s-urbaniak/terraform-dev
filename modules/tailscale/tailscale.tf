@@ -9,7 +9,7 @@ resource "null_resource" "tailscale" {
       "sudo dnf -y config-manager --add-repo https://pkgs.tailscale.com/stable/centos/9/tailscale.repo",
       "sudo dnf -y install tailscale",
       "sudo systemctl enable --now tailscaled",
-      "sudo tailscale up --authkey ${var.tailscale_key}",
+      "sudo tailscale up --authkey ${var.tailscale_key} --accept-routes",
     ]
     on_failure = fail
   }

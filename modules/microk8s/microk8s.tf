@@ -27,7 +27,7 @@ resource "null_resource" "microk8s" {
   provisioner "remote-exec" {
     inline = [
       "microk8s status --wait-ready",
-      "microk8s enable dashboard dns registry host-access",
+      "microk8s enable dns registry host-access rbac cert-manager ingress hostpath-storage",
     ]
     on_failure = fail
   }

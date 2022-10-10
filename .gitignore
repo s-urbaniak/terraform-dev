@@ -4,3 +4,4 @@ generated
 kubeconfig
 openshift.tfvars
 environment
+.DS_Store
