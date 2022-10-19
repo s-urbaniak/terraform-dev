@@ -1,3 +1,28 @@
+- [About The Project](#about-the-project)
+- [Getting Started](#getting-started)
+  * [Prerequisites](#prerequisites)
+    + [GCP](#gcp)
+    + [AWS](#aws)
+    + [Hetzner Cloud](#hetzner-cloud)
+  * [Usage](#usage)
+  * [Optional modules](#optional-modules)
+    + [podman](#podman)
+    + [Docker](#docker)
+    + [file sync](#file-sync)
+    + [kind](#kind)
+      - [Connecting via ssh](#connecting-via-ssh)
+      - [Connecting via wireguard VPN](#connecting-via-wireguard-vpn)
+      - [Specifying the kind version](#specifying-the-kind-version)
+      - [cluster creation command line options](#cluster-creation-command-line-options)
+      - [kind configuration](#kind-configuration)
+    + [wireguard](#wireguard)
+    + [Microk8s](#microk8s)
+      - [Connecting via tailscale VPN](#connecting-via-tailscale-vpn)
+    + [Tailscale](#tailscale)
+  * [Provisioning multiple machines](#provisioning-multiple-machines)
+  * [Troubleshooting](#troubleshooting)
+    + [Unable to connect via ssh](#unable-to-connect-via-ssh)
+
 ## About The Project
 
 `terraform-dev` is a Terraform based tool to install development machines on various clouds.
