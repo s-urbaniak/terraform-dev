@@ -20,12 +20,14 @@ GCP credentials must be available in the environment, see https://registry.terra
 
 Example configuration:
 ```
+provider "google" {
+  project = "my-project"
+  region  = "europe-west2"
+  zone    = "europe-west2-a"
+}
+
 module "provider" {
   source = "git::https://github.com/s-urbaniak/terraform-dev//modules/provider/gcp"
-
-  project      = "gce-project"
-  region       = "europe-west2"
-  zone         = "europe-west2-a"
 
   machine_prefix = "foo"
   username       = "foo"
@@ -45,11 +47,13 @@ AWS credentials must be available in the environment, see https://registry.terra
 
 Example configuration:
 ```
+provider "aws" {
+  profile = "my-profile"
+  region  = "eu-west-2"
+}
+
 module "provider" {
   source = "git::https://github.com/s-urbaniak/terraform-dev//modules/provider/aws"
-
-  region  = "eu-west-2"
-  profile = "my-profile"
 
   machine_prefix = "foo"
   ssh_key        = "ssh-ed25519 ..."
@@ -415,6 +419,121 @@ while the local machine is reachable at `192.168.71.2`.
 
 **Prerequisites**:
 `wireguard` must be locally installed, see https://www.wireguard.com/.
+
+#### Microk8s
+
+The `microk8s` module provisions a microk8s cluster.
+Add the following to `main.tf`:
+
+```
+module "provider" {
+  source = "git::https://github.com/s-urbaniak/terraform-dev//provider/<your_preferred platform>"
+...
+}
+
+module "microk8s" {
+  depends_on = [
+    module.tailscale,
+  ]
+
+  source = "git::https://github.com/s-urbaniak/terraform-dev//modules/microk8s"
+
+  ssh_ip  = module.provider.public_ip
+  addons = [
+    "dns",
+    "registry",
+    "host-access",
+    "rbac",
+    "ingress",
+    "hostpath-storage",
+  ]
+}
+```
+
+Note: The variable `addons` is optional and comes with a predefined list of common addons.
+
+##### Connecting via tailscale VPN
+
+To connect via Tailscale VPN
+
+```
+module "provider" {
+  source = "git::https://github.com/s-urbaniak/terraform-dev//provider/<your_preferred platform>"
+...
+}
+
+module "tailscale" {
+  source = "git::https://github.com/s-urbaniak/terraform-dev//modules/tailscale"
+  depends_on = [
+    module.machine,
+  ]
+...
+}
+
+module "microk8s" {
+  source = "git::https://github.com/s-urbaniak/terraform-dev//modules/microk8s"
+  depends_on = [
+    module.tailscale,
+  ]
+...
+}
+
+resource "null_resource" "microk8s_config" {
+  depends_on = [
+    module.microk8s
+  ]
+
+  provisioner "local-exec" {
+    command = "kubectl --kubeconfig kubeconfig_u8ks config set-cluster microk8s-cluster --server=https://$(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null core@${module.machine.public_ip} tailscale ip -4):16443"
+  }
+}
+```
+
+#### Tailscale
+
+The `tailscale` module provisions a tailscale VPN connection.
+Add the following to `main.tf` and configure an Auth key from https://login.tailscale.com/admin/settings/keys using the `tailscale_key` variable:
+
+```
+module "provider" {
+  source = "git::https://github.com/s-urbaniak/terraform-dev//provider/<your_preferred platform>"
+...
+}
+
+module "tailscale" {
+  depends_on = [
+    module.provider,
+  ]
+
+  source = "git::https://github.com/s-urbaniak/terraform-dev//modules/tailscale"
+
+  ssh_ip        = module.provider.public_ip
+  tailscale_key = "foo"
+}
+```
+
+### Provisioning multiple machines
+
+Installing multiple machines is possible using the terraform `count` variable:
+
+```
+module "machine" {
+  source = "git::https://github.com/s-urbaniak/terraform-dev//provider/<your preferred platform>"
+  count          = 2
+}
+
+module "some_module" {
+  source = "git::https://github.com/s-urbaniak/terraform-dev//modules/<your preferred module>"
+
+  depends_on = [
+    module.machine,
+  ]
+
+  count  = 2
+
+  ssh_ip        = module.machine[count.index].public_ip
+}
+```
 
 ### Troubleshooting
 

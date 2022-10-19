@@ -8,6 +8,7 @@ variable "ssh_keys" {
     user      = string
   }))
   description = "list of public ssh keys that have access to the VM"
+  default     = []
 }
 
 variable "image" {

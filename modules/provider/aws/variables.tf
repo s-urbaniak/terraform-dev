@@ -1,11 +1,3 @@
-variable "region" {
-  type = string
-}
-
-variable "profile" {
-  type = string
-}
-
 variable "machine_prefix" {
   type = string
 }

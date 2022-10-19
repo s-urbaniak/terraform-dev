@@ -6,7 +6,7 @@ resource "null_resource" "microk8s_install" {
   provisioner "remote-exec" {
     inline = [
       "sudo snap wait system seed.loaded",
-      "sudo snap install microk8s --classic",
+      "sudo snap install microk8s --classic --channel=${var.channel}",
       "sudo usermod -a -G microk8s core",
     ]
     on_failure = fail
@@ -25,10 +25,7 @@ resource "null_resource" "microk8s" {
   ]
 
   provisioner "remote-exec" {
-    inline = [
-      "microk8s status --wait-ready",
-      "microk8s enable dns registry host-access rbac cert-manager ingress hostpath-storage",
-    ]
+    inline     = concat(["microk8s status --wait-ready"], formatlist("microk8s enable %s", var.addons))
     on_failure = fail
   }
 
@@ -47,20 +44,16 @@ resource "null_resource" "microk8s_config" {
   triggers = {
     "ssh_username" : var.ssh_username
     "ssh_ip" : var.ssh_ip,
-  }
-
-
-  provisioner "local-exec" {
-    command = "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null core@${self.triggers.ssh_ip} microk8s config >uk8s_kubeconfig"
+    "kubeconfig_filename" : var.kubeconfig_filename,
   }
 
   provisioner "local-exec" {
-    command = "kubectl --kubeconfig uk8s_kubeconfig config set-cluster microk8s-cluster --server=https://$(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${self.triggers.ssh_username}@${self.triggers.ssh_ip} tailscale ip -4):16443"
+    command = "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null core@${self.triggers.ssh_ip} microk8s config >${self.triggers.kubeconfig_filename}"
   }
 
   provisioner "local-exec" {
     when    = destroy
-    command = "rm -f uk8s_kubeconfig"
+    command = "rm -f ${self.triggers.kubeconfig_filename}"
   }
 
   connection {

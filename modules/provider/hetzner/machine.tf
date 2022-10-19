@@ -10,6 +10,8 @@ data "hcloud_image" "image" {
   name = var.image
 }
 
+data "hcloud_ssh_keys" "all_keys" {}
+
 resource "hcloud_server" "kind" {
   name         = "${var.machine_prefix}-${random_id.machine_suffix.hex}"
   image        = data.hcloud_image.image.name
@@ -17,7 +19,11 @@ resource "hcloud_server" "kind" {
   location     = var.location
   firewall_ids = [hcloud_firewall.myfirewall.id]
 
-  ssh_keys = [for key in resource.hcloud_ssh_key.keys : "${key.id}"]
+  ssh_keys = data.hcloud_ssh_keys.all_keys.ssh_keys.*.name
+
+  depends_on = [
+    resource.hcloud_ssh_key.keys,
+  ]
 
   connection {
     type = "ssh"

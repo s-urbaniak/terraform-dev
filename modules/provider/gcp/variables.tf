@@ -1,15 +1,3 @@
-variable "project" {
-  type = string
-}
-
-variable "region" {
-  type = string
-}
-
-variable "zone" {
-  type = string
-}
-
 variable "machine_type" {
   type    = string
   default = "e2-standard-8"
