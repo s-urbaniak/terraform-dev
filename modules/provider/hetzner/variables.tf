@@ -23,3 +23,11 @@ variable "machine_prefix" {
 variable "location" {
   type = string
 }
+
+variable "ports" {
+  type        = list(number)
+  description = "list of ports to be opened in the firewall"
+  default = [
+    22,
+  ]
+}

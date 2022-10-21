@@ -16,3 +16,11 @@ variable "disk_size" {
   default     = 100
   description = "The disk size of the machines in gigabytes"
 }
+
+variable "ports" {
+  type        = list(number)
+  description = "list of ports to be opened in the firewall"
+  default = [
+    22,
+  ]
+}

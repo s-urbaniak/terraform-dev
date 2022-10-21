@@ -62,3 +62,17 @@ resource "null_resource" "microk8s_config" {
     host = self.triggers.ssh_ip
   }
 }
+
+resource "local_file" "tunnel" {
+  depends_on = [
+    null_resource.microk8s_config,
+  ]
+
+  content = templatefile("${path.module}/tunnel.sh.tpl", {
+    username  = var.ssh_username
+    public_ip = var.ssh_ip
+  })
+
+  filename        = "tunnel.sh"
+  file_permission = 0777
+}

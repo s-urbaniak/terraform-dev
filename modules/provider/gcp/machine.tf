@@ -43,7 +43,7 @@ resource "google_compute_firewall" "default" {
 
   allow {
     protocol = "tcp"
-    ports    = ["22"]
+    ports    = [for port in var.ports : tostring(port)]
   }
 
   allow {

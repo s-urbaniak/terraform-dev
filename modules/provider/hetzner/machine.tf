@@ -19,7 +19,7 @@ resource "hcloud_server" "kind" {
   location     = var.location
   firewall_ids = [hcloud_firewall.myfirewall.id]
 
-  ssh_keys = data.hcloud_ssh_keys.all_keys.ssh_keys.*.name
+  ssh_keys = data.hcloud_ssh_keys.all_keys.ssh_keys == null ? resource.hcloud_ssh_key.keys.*.id : data.hcloud_ssh_keys.all_keys.ssh_keys.*.name
 
   depends_on = [
     resource.hcloud_ssh_key.keys,
@@ -38,19 +38,10 @@ resource "random_id" "machine_suffix" {
 
 resource "hcloud_firewall" "myfirewall" {
   name = "${var.machine_prefix}-${random_id.machine_suffix.hex}"
-  rule {
-    direction = "in"
-    protocol  = "icmp"
-    source_ips = [
-      "0.0.0.0/0",
-      "::/0"
-    ]
-  }
 
   rule {
     direction = "in"
-    protocol  = "tcp"
-    port      = "22"
+    protocol  = "icmp"
     source_ips = [
       "0.0.0.0/0",
       "::/0"
@@ -65,5 +56,20 @@ resource "hcloud_firewall" "myfirewall" {
       "0.0.0.0/0",
       "::/0"
     ]
+  }
+
+  dynamic "rule" {
+    for_each = var.ports
+    iterator = port
+
+    content {
+      direction = "in"
+      protocol  = "tcp"
+      port      = tostring(port.value)
+      source_ips = [
+        "0.0.0.0/0",
+        "::/0"
+      ]
+    }
   }
 }
