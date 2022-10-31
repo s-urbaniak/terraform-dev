@@ -25,7 +25,7 @@ resource "google_compute_instance" "kind_vm" {
   }
 
   metadata = {
-    ssh-keys = join("\n", [for key in var.ssh_keys : "core:${key.publickey}"])
+    ssh-keys = "core:${var.ssh_key}"
   }
 }
 

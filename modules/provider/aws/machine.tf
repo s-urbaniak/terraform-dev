@@ -87,7 +87,6 @@ resource "aws_security_group" "sg" {
   }
 }
 
-
 resource "aws_key_pair" "key" {
   key_name   = "${var.machine_prefix}-${random_id.machine_suffix.hex}"
   public_key = var.ssh_key
